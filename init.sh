@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 #
-# Idempotent Debian initialization script for APT policies and locales.
+# Idempotent Debian initialization script for APT policies, locales, TCP BBR,
+# and APT cleanup.
 # Strictly adheres to Google Shell Style Guide.
 
 set -euo pipefail
 
 readonly APT_CONF="/etc/apt/apt.conf.d/99norecommends"
+readonly BBR_CONF="/etc/sysctl.d/99-bbr.conf"
 
 configure_apt() {
   local desired_apt_conf
@@ -101,6 +103,59 @@ EOF
   fi
 }
 
+configure_bbr() {
+  local desired_bbr_conf
+  desired_bbr_conf='net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr'
+
+  local current_bbr_conf=""
+  if [[ -f "${BBR_CONF}" ]]; then
+    current_bbr_conf="$(cat "${BBR_CONF}")"
+  fi
+
+  local active_cc=""
+  if command -v sysctl >/dev/null 2>&1; then
+    active_cc="$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null || true)"
+  fi
+
+  if [[ "${current_bbr_conf}" != "${desired_bbr_conf}" ]] || \
+     [[ "${active_cc}" != "bbr" ]]; then
+    cat <<'EOF' > "${BBR_CONF}"
+net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr
+EOF
+    chmod 644 "${BBR_CONF}"
+    if command -v sysctl >/dev/null 2>&1; then
+      sysctl -p "${BBR_CONF}" >/dev/null 2>&1 || true
+    fi
+    echo "OK"
+  else
+    echo "SKIP"
+  fi
+}
+
+configure_apt_cleanup() {
+  local autoremove_needed=""
+  if command -v apt-get >/dev/null 2>&1; then
+    autoremove_needed="$(apt-get autoremove -s 2>/dev/null | \
+      grep -i '^Remv' || true)"
+  fi
+
+  local cache_files=""
+  if [[ -d "/var/cache/apt/archives" ]]; then
+    cache_files="$(find /var/cache/apt/archives -maxdepth 1 -name '*.deb' \
+      -print -quit 2>/dev/null || true)"
+  fi
+
+  if [[ -n "${autoremove_needed}" ]] || [[ -n "${cache_files}" ]]; then
+    apt-get autoremove -qq -y --purge </dev/null >/dev/null 2>&1 || true
+    apt-get clean </dev/null >/dev/null 2>&1 || true
+    echo "OK"
+  else
+    echo "SKIP"
+  fi
+}
+
 main() {
   if [[ "${EUID}" -ne 0 ]]; then
     echo "[ERROR] Root privileges required." >&2
@@ -113,8 +168,16 @@ main() {
   local status_locales=""
   status_locales="$(configure_locales)"
 
+  local status_bbr=""
+  status_bbr="$(configure_bbr)"
+
+  local status_cleanup=""
+  status_cleanup="$(configure_apt_cleanup)"
+
   echo "[STATUS] APT Configuration: [${status_apt}]"
   echo "[STATUS] Locale Configuration: [${status_locales}]"
+  echo "[STATUS] TCP BBR Optimization: [${status_bbr}]"
+  echo "[STATUS] APT Cleanup: [${status_cleanup}]"
 }
 
 main "$@"
