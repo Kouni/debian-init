@@ -10,8 +10,16 @@ Debian post-installation initialization script.
   - Set default system locale to `C.UTF-8`
   - Purge unselected locales to minimize disk usage
 
-## Usage
+## Quick Start (One-Line Execution)
+
+### via `curl`
 
 ```bash
-sudo bash setup.sh
+curl -fsSL https://raw.githubusercontent.com/Kouni/debian-init/main/setup.sh | sudo bash
+```
+
+### via `wget`
+
+```bash
+wget -qO- https://raw.githubusercontent.com/Kouni/debian-init/main/setup.sh | sudo bash
 ```
