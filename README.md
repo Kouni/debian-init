@@ -18,11 +18,11 @@ Debian post-installation initialization script.
 ### Recommended (`curl`)
 
 ```bash
-sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/Kouni/debian-init/main/setup.sh)"
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/Kouni/debian-init/main/init.sh)"
 ```
 
 ### Alternative (`wget`)
 
 ```bash
-sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Kouni/debian-init/main/setup.sh)"
+sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Kouni/debian-init/main/init.sh)"
 ```
