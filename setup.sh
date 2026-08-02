@@ -14,7 +14,13 @@ APT::Install-Suggests "false";
 EOF
 chmod 644 /etc/apt/apt.conf.d/99norecommends
 
-# 2. Configure system locales and purge unselected locales
+# 2. Ensure locales package is installed
+if ! dpkg -s locales >/dev/null 2>&1; then
+    DEBIAN_FRONTEND=noninteractive apt-get update -qq </dev/null
+    DEBIAN_FRONTEND=noninteractive apt-get install -qq -y locales </dev/null
+fi
+
+# 3. Configure system locales and purge unselected locales
 cat <<'EOF' > /etc/locale.gen
 en_US.UTF-8 UTF-8
 zh_TW.UTF-8 UTF-8
@@ -30,9 +36,9 @@ fi
 update-locale LANG=C.UTF-8
 
 if command -v dpkg-reconfigure >/dev/null 2>&1; then
-    DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive locales >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive locales </dev/null >/dev/null 2>&1
 elif command -v locale-gen >/dev/null 2>&1; then
-    locale-gen --purge >/dev/null 2>&1
+    locale-gen --purge </dev/null >/dev/null 2>&1
 fi
 
 echo "[OK] Applied APT policies and locale configurations."

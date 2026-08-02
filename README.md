@@ -12,14 +12,14 @@ Debian post-installation initialization script.
 
 ## Quick Start (One-Line Execution)
 
-### via `curl`
+### Recommended (`curl`)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Kouni/debian-init/main/setup.sh | sudo bash
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/Kouni/debian-init/main/setup.sh)"
 ```
 
-### via `wget`
+### Alternative (`wget`)
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/Kouni/debian-init/main/setup.sh | sudo bash
+sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Kouni/debian-init/main/setup.sh)"
 ```
