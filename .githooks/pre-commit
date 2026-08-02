@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Pre-commit hook to verify Google Shell Style Guide compliance via lint.sh.
+set -euo pipefail
+
+echo "● Executing pre-commit style verification..."
+if [[ -x "./lint.sh" ]]; then
+  ./lint.sh
+else
+  echo "[ERROR] ./lint.sh not found or not executable!" >&2
+  exit 1
+fi
